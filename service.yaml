@@ -43,7 +43,7 @@ data:
     {
       "listeners": [
         {
-          "address": "tcp://127.0.0.1:80",
+          "address": "tcp://0.0.0.0:3443",
           "filters": [
             {
               "type": "read",
@@ -80,7 +80,7 @@ data:
       ],
       "admin": {
         "access_log_path": "/dev/null",
-        "address": "tcp://127.0.0.1:8001"
+        "address": "tcp://0.0.0.0:8001"
       },
       "cluster_manager": {
         "clusters": [
@@ -99,18 +99,17 @@ data:
       }
     }
 
-
 ---
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
-  name: envoy-backend
+  name: envoy-backend1
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: envoy-backend
+        app: envoy-backend1
     spec:
       containers:
       - name: envoy-backend
@@ -118,6 +117,8 @@ spec:
         command:
         - "/bin/bash"
         - "/scripts/run.sh"
+        ports:
+        - containerPort: 3443
         volumeMounts:
         - name: config-map-service
           mountPath: /service/
@@ -135,3 +136,67 @@ spec:
       - name: backend-envoy-config
         configMap:
           name: backend-envoy-config
+
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: envoy-backend2
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: envoy-backend2
+    spec:
+      containers:
+      - name: envoy-backend
+        image: lyft/envoy:latest
+        command:
+        - "/bin/bash"
+        - "/scripts/run.sh"
+        ports:
+        - containerPort: 3443
+        volumeMounts:
+        - name: config-map-service
+          mountPath: /service/
+        - name: script-run
+          mountPath: /scripts/
+        - name: backend-envoy-config
+          mountPath: /etc/envoy/
+      volumes:
+      - name: config-map-service
+        configMap:
+          name: backend-python-service
+      - name: script-run
+        configMap:
+          name: start-script
+      - name: backend-envoy-config
+        configMap:
+          name: backend-envoy-config
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service1
+spec:
+  selector:
+    app: envoy-backend1
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3443
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: service2
+spec:
+  selector:
+    app: envoy-backend2
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3443
