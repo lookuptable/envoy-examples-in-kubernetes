@@ -1,0 +1,64 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: backend-python-service
+data:
+  service.py: |-
+    from flask import Flask
+    import socket
+    import os
+
+    app = Flask(__name__)
+
+
+    @app.route('/service/<service_number>')
+    def hello(service_number):
+      return ('Hello from behind Envoy (service {})! hostname: {} resolved'
+              'hostname: {}\n'.format(os.environ.get('SERVICE_NAME', 'sample service'),
+              socket.gethostname(),
+              socket.gethostbyname(socket.gethostname())))
+
+    if __name__ == "__main__":
+      app.run(host='127.0.0.1', port=8080, debug=True)
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: start-script
+data:
+  run.sh: |-
+    apt-get update && apt-get -q install -y curl python-pip
+    pip install -q Flask
+    python /service/service.py
+
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: envoy-backend
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: envoy-backend
+    spec:
+      containers:
+      - name: envoy-backend
+        image: lyft/envoy:latest
+        command:
+        - "/bin/bash"
+        - "/scripts/run.sh"
+        volumeMounts:
+        - name: config-map-service
+          mountPath: /service/
+        - name: script-run
+          mountPath: /scripts/
+      volumes:
+      - name: config-map-service
+        configMap:
+          name: backend-python-service
+      - name: script-run
+        configMap:
+          name: start-script
