@@ -30,7 +30,75 @@ data:
   run.sh: |-
     apt-get update && apt-get -q install -y curl python-pip
     pip install -q Flask
-    python /service/service.py
+    python /service/service.py &
+    envoy -c /etc/envoy/envoy.json
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: backend-envoy-config
+data:
+  envoy.json: |-
+    {
+      "listeners": [
+        {
+          "address": "tcp://127.0.0.1:80",
+          "filters": [
+            {
+              "type": "read",
+              "name": "http_connection_manager",
+              "config": {
+                "codec_type": "auto",
+                "stat_prefix": "ingress_http",
+                "route_config": {
+                  "virtual_hosts": [
+                    {
+                      "name": "service",
+                      "domains": ["*"],
+                      "routes": [
+                        {
+                          "timeout_ms": 0,
+                          "prefix": "/service",
+                          "cluster": "local_service"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "filters": [
+                  {
+                    "type": "decoder",
+                    "name": "router",
+                    "config": {}
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "admin": {
+        "access_log_path": "/dev/null",
+        "address": "tcp://127.0.0.1:8001"
+      },
+      "cluster_manager": {
+        "clusters": [
+          {
+            "name": "local_service",
+            "connect_timeout_ms": 250,
+            "type": "strict_dns",
+            "lb_type": "round_robin",
+            "hosts": [
+              {
+                "url": "tcp://127.0.0.1:8080"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
 
 ---
 kind: Deployment
@@ -55,6 +123,8 @@ spec:
           mountPath: /service/
         - name: script-run
           mountPath: /scripts/
+        - name: backend-envoy-config
+          mountPath: /etc/envoy/
       volumes:
       - name: config-map-service
         configMap:
@@ -62,3 +132,6 @@ spec:
       - name: script-run
         configMap:
           name: start-script
+      - name: backend-envoy-config
+        configMap:
+          name: backend-envoy-config
