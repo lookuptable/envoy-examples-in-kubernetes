@@ -4,6 +4,20 @@ metadata:
   name: backend-ns
 
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa1
+  namespace: backend-ns
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa2
+  namespace: backend-ns
+
+---
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -136,6 +150,7 @@ spec:
           mountPath: /scripts/
         - name: backend-envoy-config
           mountPath: /etc/envoy/
+      serviceAccount: backend-sa1
       volumes:
       - name: config-map-service
         configMap:
@@ -175,6 +190,7 @@ spec:
           mountPath: /scripts/
         - name: backend-envoy-config
           mountPath: /etc/envoy/
+      serviceAccount: backend-sa2
       volumes:
       - name: config-map-service
         configMap:

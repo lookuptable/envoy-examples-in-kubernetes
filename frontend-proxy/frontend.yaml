@@ -4,6 +4,13 @@ metadata:
   name: frontend-ns
 
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: frontend-sa
+  namespace: frontend-ns
+
+---
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -114,6 +121,7 @@ spec:
         volumeMounts:
         - name: frontend-envoy-config
           mountPath: /etc/envoy/
+      serviceAccount: frontend-sa
       volumes:
       - name: frontend-envoy-config
         configMap:
