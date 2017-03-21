@@ -1,7 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: frontend-ns
+
+---
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: frontend-envoy-config
+  namespace: frontend-ns
 data:
   envoy.json: |-
     {
@@ -61,7 +68,7 @@ data:
             "features": "http2",
             "hosts": [
               {
-                "url": "tcp://service1:80"
+                "url": "tcp://service1.backend-ns:80"
               }
             ]
           },
@@ -73,7 +80,7 @@ data:
             "features": "http2",
             "hosts": [
               {
-                "url": "tcp://service2:80"
+                "url": "tcp://service2.backend-ns:80"
               }
             ]
           }
@@ -87,6 +94,7 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   name: envoy-frontend
+  namespace: frontend-ns
 spec:
   replicas: 1
   template:
@@ -116,6 +124,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: frontend-service
+  namespace: frontend-ns
 spec:
   selector:
     app: envoy-frontend
