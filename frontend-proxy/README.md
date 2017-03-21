@@ -19,7 +19,7 @@ specified in `backend.yaml`. You can start all pods with a single command:
 kubectl create -f frontend.yaml -f backend.yaml
 ```
 
-1. Fetch service IP
+2. Fetch service IP
 The `frontend.yaml` specifies a service object of type `LoadBalancer`, which
 instructs Kubernetes to assign an external IP address that is accessible
 publicly. You can find the external IP as follows
@@ -34,7 +34,7 @@ EXTERNAL_IP=$(kubectl get -n frontend-ns svc/frontend-service \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
 
-1. Send requests
+3. Send requests
 You can now `curl` against the front Envoy proxy:
 ```
 curl http://${EXTERNAL_IP}/service/1
