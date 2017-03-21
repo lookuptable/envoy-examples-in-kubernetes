@@ -11,35 +11,30 @@ proxy.
 This document assumes that you have a Kubernetes cluster ready and your local
 `kubectl` has been properly configured to talk with the cluster.
 
-1. Create a namespace
-```
-kubectl create ns front-proxy
-```
-
-2. Run the pods
+1. Run the pods
 
 The front proxy pod is specified in `frontend.yaml` and the service pods are
 specified in `backend.yaml`. You can start all pods with a single command:
 ```
-kubectl create -n front-proxy -f frontend.yaml -f backend.yaml
+kubectl create -f frontend.yaml -f backend.yaml
 ```
 
-3. Fetch service IP
+1. Fetch service IP
 The `frontend.yaml` specifies a service object of type `LoadBalancer`, which
 instructs Kubernetes to assign an external IP address that is accessible
 publicly. You can find the external IP as follows
 ```
-kubectl get -n front-proxy svc/frontend-service
+kubectl get -n frontend-ns svc/frontend-service
 ```
 Notice that it may take a few minutes before the value of the IP is populated.
 
 Let's save the external IP into an environment variable so we can use it later:
 ```
-EXTERNAL_IP=$(kubectl get -n front-proxy svc/frontend-service \
+EXTERNAL_IP=$(kubectl get -n frontend-ns svc/frontend-service \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 ```
 
-4. Send requests
+1. Send requests
 You can now `curl` against the front Envoy proxy:
 ```
 curl http://${EXTERNAL_IP}/service/1
@@ -50,9 +45,9 @@ backends according to the path parameter.
 
 ## Clean up
 
-You can delete all created services/pods/deployments by deleting the namespace:
+You can now delete all created services/pods/deployments:
 ```
-kubectl delete ns/front-proxy
+kubectl delete -f frontend.yaml -f backend.yaml
 ```
 
 ## Disclaimer
