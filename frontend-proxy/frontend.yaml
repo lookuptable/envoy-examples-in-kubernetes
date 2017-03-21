@@ -77,7 +77,15 @@ data:
               {
                 "url": "tcp://service1.backend-ns:80"
               }
-            ]
+            ],
+            "ssl_context": {
+              "ca_cert_file": "/etc/istio-auth/root-cert.pem",
+              "cert_chain_file": "/etc/istio-auth/cert-chain.pem",
+              "private_key_file": "/etc/istio-auth/key.pem",
+              "verify_subject_alt_name": [
+                "istio:backend-sa1.backend-ns.cluster.local"
+              ]
+            }
           },
           {
             "name": "service2",
@@ -89,7 +97,15 @@ data:
               {
                 "url": "tcp://service2.backend-ns:80"
               }
-            ]
+            ],
+            "ssl_context": {
+              "ca_cert_file": "/etc/istio-auth/root-cert.pem",
+              "cert_chain_file": "/etc/istio-auth/cert-chain.pem",
+              "private_key_file": "/etc/istio-auth/key.pem",
+              "verify_subject_alt_name": [
+                "istio:backend-sa2.backend-ns.cluster.local"
+              ]
+            }
           }
         ]
       }
@@ -121,11 +137,16 @@ spec:
         volumeMounts:
         - name: frontend-envoy-config
           mountPath: /etc/envoy/
+        - name: istio-auth
+          mountPath: /etc/istio-auth/
       serviceAccount: frontend-sa
       volumes:
       - name: frontend-envoy-config
         configMap:
           name: frontend-envoy-config
+      - name: istio-auth
+        secret:
+          secretName: istio.frontend-sa
 
 ---
 kind: Service

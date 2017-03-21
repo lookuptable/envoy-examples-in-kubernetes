@@ -14,9 +14,11 @@ This document assumes that you have a Kubernetes cluster ready and your local
 1. Run the pods
 
 The front proxy pod is specified in `frontend.yaml` and the service pods are
-specified in `backend.yaml`. You can start all pods with a single command:
+specified in `backend.yaml`. Also, to enable Istio auth, you need to install
+Istio CA component, which is specified in `istio-ca.yaml`. You can start all
+pods with a single command:
 ```
-kubectl create -f frontend.yaml -f backend.yaml
+kubectl create -f frontend.yaml -f backend.yaml -f istio-ca.yaml
 ```
 
 2. Fetch service IP
@@ -47,7 +49,7 @@ backends according to the path parameter.
 
 You can now delete all created services/pods/deployments:
 ```
-kubectl delete ns/{frontend-ns,backend-ns}
+kubectl delete ns/{frontend-ns,backend-ns,istio-ca}
 ```
 
 ## Disclaimer
