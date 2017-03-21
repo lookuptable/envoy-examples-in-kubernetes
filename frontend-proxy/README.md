@@ -47,7 +47,7 @@ backends according to the path parameter.
 
 You can now delete all created services/pods/deployments:
 ```
-kubectl delete ns/{frontend-ns, backend-ns}
+kubectl delete ns/{frontend-ns,backend-ns}
 ```
 
 ## Disclaimer
