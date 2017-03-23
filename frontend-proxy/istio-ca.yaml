@@ -18,5 +18,5 @@ spec:
     spec:
       containers:
       - name: istio-ca-container
-        image: gcr.io/yangguan-develop/istio_ca:latest
+        image: istio/istio-ca:latest
         imagePullPolicy: Always
